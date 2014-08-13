@@ -1,0 +1,59 @@
+%%1. Specify COM port that the Arduino is connected to.
+
+pause(2)
+port= 'COM6'%input('Enter serial port name here: ');
+
+%%2. Initialize serial port.
+if (~exist('serialFlag','var'))
+    [arduino.s,serialFlag] = setupSerial(port);
+end
+
+%%3. Open a new figure, add start/stop and close serial buttons.
+if(~exist('h', 'var') || ~ishandle(h))
+    h = figure(1);
+end
+%add a start/stop button and close serial button inside figure
+%This button calls the 'stop_call_tempGraph' function every time it is
+%pressed
+if(~exist('button','var'))
+    button = uicontrol('Style','pushbutton','String','Stop',...
+        'pos',[0 0 50 25],'parent',h,'Callback','stop_call_tempGraph',...
+        'UserData',1);
+end
+
+%%4. Create the surface graphics object
+if (~exist('myAxes','var'))
+    buf_len = 500;
+    index=1:buf_len;
+    zeroIndex=zeros(size(index));
+    tcdata=zeroIndex;
+    limits=[15 50]; %expected range of temps for plotting
+    
+    myAxes=axes('XLim',[0 buf_len],'YLim',[0 0.1],'ZLim',limits,'CLim',limits);
+    view(0,0);
+    grid on;
+    
+    %create surface object sfc o display temp data
+    sfc=surface(index,[0,0],[tcdata; zeroIndex], [tcdata; tcdata]);
+    set(sfc, 'Edgecolor','flat','FaceColor','flat','Parent',myAxes)
+    colorbar
+    title('Real-time Temperature Readings, \circC')
+    xlabel('Samples')
+    zlabel('Temperature (\circC)')
+    
+    set(h,'Position',[200 200 890 660])
+    drawnow;
+end
+
+%%5. Runs a loop that continually reads the temperature sensor values
+%The temperature sensor data is placed in the variable tc.
+mode='T';%temperature sensor mode
+while (get(button,'UserData'))
+    tc=readTemp(arduino.s,mode);
+    tcdata=[tcdata(2:end),tc];
+    size(tcdata)
+    size(tc)
+
+    set(sfc,'Zdata',[tcdata; zeroIndex], 'Cdata',[tcdata; tcdata])
+    drawnow;
+end
