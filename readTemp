@@ -1,0 +1,8 @@
+function temp = readTemp(s,mode)
+%fopen(s);
+%read request
+fprintf(s,mode);
+
+%read value returned
+temp = fscanf(s,'%f');
+end
