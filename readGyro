@@ -1,0 +1,14 @@
+function [gx, gy, gz] = readGyro(gyroConnection, isCalibration)
+
+% If this is not during calibration, send request for rates
+if(~isCalibration)
+    fprintf(gyroConnection.s,'C');
+end
+fprintf(gyroConnection.s,'G');
+
+    G=fscanf(gyroConnection.s,'%f');
+    gx=G(1);
+    gy=G(2);
+    gz=G(3);
+    
+end
