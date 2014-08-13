@@ -1,0 +1,19 @@
+function [angle]=getAccelAngle(gyro,axis)
+fprintf(s,'A');
+fscanf(s)
+%Use read accel function to add filter
+if axis==1
+    if az>0
+        angle=atan(-ay/az);
+    end
+    if az<0
+        angle=atan(ay/az);
+    end
+end
+if axis==2
+    if az>0
+        angle=atan(-ax/az);
+    end
+    
+    
+end
