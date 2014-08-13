@@ -1,0 +1,341 @@
+clear all
+accelConnection=setupSerial('COM6');
+
+%% Calibrate negative X
+msg=msgbox('(1/12) Align x-axis up and hold Apollo still (blinker up).');
+    uiwait(msg)
+%C:\Users\Peter\Documents\MATLAB\Carbon Origins\APOLLOicon.png
+%    copyfile(fullfile('C:','Users','Peter','Documents','MATLAB', ...
+%        'Carbon Origins','APOLLOicon.png'))
+%    [cdata]=imread('APOLLOicon.png');
+%msg2=msgbox('Collecting data...','custom',cdata);
+sp = 200;
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=sum(log(1:i,1))/i;
+ay=sum(log(1:i,2))/i;
+az=sum(log(1:i,3))/i;
+
+L=sqrt(ay^2+az^2);
+GxNeg=ax/cos(atan(L/ax));
+
+%% Calibrate positive X
+msg=msgbox('(2/12) Align x-axis down and hold Apollo still (blinker down).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=sum(log(1:i,1))/i;
+ay=sum(log(1:i,2))/i;
+az=sum(log(1:i,3))/i;
+
+L=sqrt(ay^2+az^2);
+GxPos=ax/cos(atan(L/ax));
+%% Calibrate negative Y
+msg=msgbox('(3/12) Align y-axis up and hold Apollo still (blinker up).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=sum(log(1:i,1))/i;
+ay=sum(log(1:i,2))/i;
+az=sum(log(1:i,3))/i;
+
+L=sqrt(ax^2+az^2);
+GyNeg=ay/cos(atan(L/ay));
+%% Calibrate positive Y
+msg=msgbox('(4/12) Align y-axis down and hold Apollo still (blinker down).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=sum(log(1:i,1))/i;
+ay=sum(log(1:i,2))/i;
+az=sum(log(1:i,3))/i;
+
+L=sqrt(ax^2+az^2);
+GyPos=ay/cos(atan(L/ay));
+%% Calibrate negative Z
+msg=msgbox('(5/12) Align z-axis up and hold Apollo still (blinker up).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=sum(log(1:i,1))/i;
+ay=sum(log(1:i,2))/i;
+az=sum(log(1:i,3))/i;
+
+L=sqrt(ax^2+ay^2);
+GzNeg=az/cos(atan(L/az));
+%% Calibrate positive Z
+msg=msgbox('(6/12) Align z-axis down and hold Apollo still (blinker down).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=sum(log(1:i,1))/i;
+ay=sum(log(1:i,2))/i;
+az=sum(log(1:i,3))/i;
+
+L=sqrt(ax^2+ay^2);
+GzPos=az/cos(atan(L/az));
+%% Calculate offsets and correction scaling
+Xoffset=(GxPos+GxNeg)/2;
+Yoffset=(GyPos+GyNeg)/2;
+Zoffset=(GzPos+GzNeg)/2;
+
+Xscale=9.8/(0.5*abs(GxPos-GxNeg));
+Yscale=9.8/(0.5*abs(GyPos-GyNeg));
+Zscale=9.8/(0.5*abs(GzPos-GzNeg));
+
+%msg=msgbox('Look at data.');
+%uiwait(msg)
+......................................................................
+%%----------------------- DOUBLE CALIBRATION -------------------------
+
+%% Calibrate negative X
+msg=msgbox('(7/12) Align x-axis up and hold Apollo still (blinker up).');
+    uiwait(msg)
+%C:\Users\Peter\Documents\MATLAB\Carbon Origins\APOLLOicon.png
+%    copyfile(fullfile('C:','Users','Peter','Documents','MATLAB', ...
+%        'Carbon Origins','APOLLOicon.png'))
+%    [cdata]=imread('APOLLOicon.png');
+%msg2=msgbox('Collecting data...','custom',cdata);
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=((sum(log(1:i,1))/i)-Xoffset)*Xscale;
+ay=((sum(log(1:i,2))/i)-Yoffset)*Yscale;
+az=((sum(log(1:i,3))/i)-Zoffset)*Zscale;
+
+L=sqrt(ay^2+az^2);
+GxNeg=ax/cos(atan(L/ax));
+
+%% Calibrate positive X
+msg=msgbox('(8/12) Align x-axis down and hold Apollo still (blinker down).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=((sum(log(1:i,1))/i)-Xoffset)*Xscale;
+ay=((sum(log(1:i,2))/i)-Yoffset)*Yscale;
+az=((sum(log(1:i,3))/i)-Zoffset)*Zscale;
+
+L=sqrt(ay^2+az^2);
+GxPos=ax/cos(atan(L/ax));
+%% Calibrate negative Y
+msg=msgbox('(9/12) Align y-axis up and hold Apollo still (blinker up).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=((sum(log(1:i,1))/i)-Xoffset)*Xscale;
+ay=((sum(log(1:i,2))/i)-Yoffset)*Yscale;
+az=((sum(log(1:i,3))/i)-Zoffset)*Zscale;
+
+L=sqrt(ax^2+az^2);
+GyNeg=ay/cos(atan(L/ay));
+%% Calibrate positive Y
+msg=msgbox('(10/12) Align y-axis down and hold Apollo still (blinker down).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=((sum(log(1:i,1))/i)-Xoffset)*Xscale;
+ay=((sum(log(1:i,2))/i)-Yoffset)*Yscale;
+az=((sum(log(1:i,3))/i)-Zoffset)*Zscale;
+
+L=sqrt(ax^2+az^2);
+GyPos=ay/cos(atan(L/ay));
+%% Calibrate negative Z
+msg=msgbox('(11/12) Align z-axis up and hold Apollo still (blinker up).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=((sum(log(1:i,1))/i)-Xoffset)*Xscale;
+ay=((sum(log(1:i,2))/i)-Yoffset)*Yscale;
+az=((sum(log(1:i,3))/i)-Zoffset)*Zscale;
+
+L=sqrt(ax^2+ay^2);
+GzNeg=az/cos(atan(L/az));
+%% Calibrate positive Z
+msg=msgbox('(12/12) Align z-axis down and hold Apollo still (blinker down).');
+    uiwait(msg)
+log=zeros(sp,3);
+for i=1:sp
+   fprintf(accelConnection,'A'); 
+   A=fscanf(accelConnection,'%f');
+   log(i,:)=transpose(A);         
+end
+ax=((sum(log(1:i,1))/i)-Xoffset)*Xscale;
+ay=((sum(log(1:i,2))/i)-Yoffset)*Yscale;
+az=((sum(log(1:i,3))/i)-Zoffset)*Zscale;
+
+L=sqrt(ax^2+ay^2);
+GzPos=az/cos(atan(L/az));
+%% Calculate offsets and correction scaling
+
+Xoffset=Xoffset+(GxPos+GxNeg)/2;
+Yoffset=Yoffset+(GyPos+GyNeg)/2;
+Zoffset=Zoffset+(GzPos+GzNeg)/2;
+
+Xscale=Xscale*9.8/(0.5*abs(GxPos-GxNeg));
+Yscale=Yscale*9.8/(0.5*abs(GyPos-GyNeg));
+Zscale=Zscale*9.8/(0.5*abs(GzPos-GzNeg));
+
+%msg=msgbox('Look at data.');
+%uiwait(msg)
+%% Test it
+if 0
+msg=msgbox('Orientation 1// Tilt Apollo about all three axes and observe vector magnitude. Should be 9.8');
+uiwait(msg)
+%figurehandle=figure(1);
+
+    %stopButton = uicontrol('Style','togglebutton','String','Stop & Close Serial Port',...
+    %    'pos',[0 0 200 25],'parent',figurehandle);
+
+pause(0.25)
+log=zeros(200,3);
+
+for i=1:200 % (get(stopButton,'Value')==0)
+       fprintf(accelConnection,'A'); 
+       A=fscanf(accelConnection,'%f');
+       Xtrue=(A(1)-Xoffset)*Xscale;
+       Ytrue=(A(2)-Yoffset)*Yscale;
+       Ztrue=(A(3)-Zoffset)*Zscale;
+       magnitude=sqrt(Xtrue^2+Ytrue^2+Ztrue^2);
+       Gforce=magnitude/9.8;
+       log(i)=magnitude;
+       
+       %pause(.001)
+end
+avg=sum(log)/i
+msg=msgbox('Orientation 2');
+uiwait(msg)
+log=zeros(200,1);
+for i=1:200 % (get(stopButton,'Value')==0)
+       fprintf(accelConnection,'A'); 
+       A=fscanf(accelConnection,'%f');
+       Xtrue=(A(1)-Xoffset)*Xscale;
+       Ytrue=(A(2)-Yoffset)*Yscale;
+       Ztrue=(A(3)-Zoffset)*Zscale;
+       magnitude=sqrt(Xtrue^2+Ytrue^2+Ztrue^2);
+       Gforce=magnitude/9.8;
+       log(i)=magnitude;
+       
+       %pause(.001)
+end
+avg=sum(log)/i
+msg=msgbox('Orientation 3');
+uiwait(msg)
+log=zeros(200,1);
+for i=1:200 % (get(stopButton,'Value')==0)
+       fprintf(accelConnection,'A'); 
+       A=fscanf(accelConnection,'%f');
+       Xtrue=(A(1)-Xoffset)*Xscale;
+       Ytrue=(A(2)-Yoffset)*Yscale;
+       Ztrue=(A(3)-Zoffset)*Zscale;
+       magnitude=sqrt(Xtrue^2+Ytrue^2+Ztrue^2);
+       Gforce=magnitude/9.8;
+       log(i)=magnitude;
+       
+       %pause(.001)
+end
+avg=sum(log)/i
+
+msg=msgbox('Orientation 4');
+uiwait(msg)
+log=zeros(200,1);
+for i=1:200 % (get(stopButton,'Value')==0)
+       fprintf(accelConnection,'A'); 
+       A=fscanf(accelConnection,'%f');
+       Xtrue=(A(1)-Xoffset)*Xscale;
+       Ytrue=(A(2)-Yoffset)*Yscale;
+       Ztrue=(A(3)-Zoffset)*Zscale;
+       magnitude=sqrt(Xtrue^2+Ytrue^2+Ztrue^2);
+       Gforce=magnitude/9.8;
+       log(i)=magnitude;
+       
+       %pause(.001)
+end
+avg=sum(log)/i
+
+msg=msgbox('Orientation 5');
+uiwait(msg)
+log=zeros(200,1);
+for i=1:200 % (get(stopButton,'Value')==0)
+       fprintf(accelConnection,'A'); 
+       A=fscanf(accelConnection,'%f');
+       Xtrue=(A(1)-Xoffset)*Xscale;
+       Ytrue=(A(2)-Yoffset)*Yscale;
+       Ztrue=(A(3)-Zoffset)*Zscale;
+       magnitude=sqrt(Xtrue^2+Ytrue^2+Ztrue^2);
+       Gforce=magnitude/9.8;
+       log(i)=magnitude;
+       
+       %pause(.001)
+end
+avg=sum(log)/i
+
+msg=msgbox('Orientation 6');
+uiwait(msg)
+log=zeros(200,1);
+for i=1:200 % (get(stopButton,'Value')==0)
+       fprintf(accelConnection,'A'); 
+       A=fscanf(accelConnection,'%f');
+       Xtrue=(A(1)-Xoffset)*Xscale;
+       Ytrue=(A(2)-Yoffset)*Yscale;
+       Ztrue=(A(3)-Zoffset)*Zscale;
+       magnitude=sqrt(Xtrue^2+Ytrue^2+Ztrue^2);
+       Gforce=magnitude/9.8;
+       log(i)=magnitude;
+       
+       %pause(.001)
+end
+avg=sum(log)/i
+end
+%shoot these numbers to Apollo
+
+Xoffset
+Yoffset
+Zoffset
+Xscale
+Yscale
+Zscale
+%delete(msg2)
+CloseSerial()
