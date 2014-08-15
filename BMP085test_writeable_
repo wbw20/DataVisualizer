@@ -1,0 +1,96 @@
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+
+/*************************************************** 
+  This is an example for the BMP085 Barometric Pressure & Temp Sensor
+
+  Designed specifically to work with the Adafruit BMP085 Breakout 
+  ----> https://www.adafruit.com/products/391
+
+  These displays use I2C to communicate, 2 pins are required to  
+  interface
+  Adafruit invests time and resources pr`oviding this open source code, 
+  please support Adafruit and open-source hardware by purchasing 
+  products from Adafruit!
+
+  Written by Limor Fried/Ladyada for Adafruit Industries.  
+  BSD license, all text above must be included in any redistribution
+ ****************************************************/
+
+// Connect VCC of the BMP085 sensor to 3.3V (NOT 5.0V!)
+// Connect GND to Ground
+// Connect SCL to i2c clock - on '168/'328 Arduino Uno/Duemilanove/etc thats Analog 5
+// Connect SDA to i2c data - on '168/'328 Arduino Uno/Duemilanove/etc thats Analog 4
+// EOC is not used, it signifies an end of conversion
+// XCLR is a reset pin, also not used here
+
+//Initialize vars
+int mode =-1;
+
+Adafruit_BMP085 bmp;
+  
+void setup() {
+  SerialUSB.begin(9600);
+  while(!SerialUSB) {}
+  
+  //Check serial coms... acknowledgement routine
+  SerialUSB.println('a');
+  int a = 'b';
+  while (a!='a')
+  {
+    a=SerialUSB.read();
+  }
+ // pinMode(13,OUTPUT);
+ //   for (int x=0;x<3000;x++){
+ //     digitalWrite(13,HIGH);
+ //     delay(1000);
+ //     digitalWrite(13,LOW);
+ //     delay(1000);
+ //   }
+  
+  if (!bmp.begin()) {
+	SerialUSB.println("Could not find a valid BMP085 sensor, check wiring!");
+	while (1) {}
+  }
+}
+  
+void loop() {
+    //SerialUSB.print("Temperature = ");
+    
+    if (SerialUSB.available()>0)
+    {
+      mode=SerialUSB.read();
+      switch (mode)
+      {
+        case 'T':
+        SerialUSB.println(bmp.readTemperature());
+        break;
+      }
+    }
+    //SerialUSB.println(" *C");
+    
+    //SerialUSB.print("Pressure = ");
+    //SerialUSB.print(bmp.readPressure());
+    //SerialUSB.println(" Pa");
+    
+    // Calculate altitude assuming 'standard' barometric
+    // pressure of 1013.25 millibar = 101325 Pascal
+    //SerialUSB.print("Altitude = ");
+    //SerialUSB.print(bmp.readAltitude());
+    //SerialUSB.println(" meters");
+
+    //SerialUSB.print("Pressure at sealevel (calculated) = ");
+    //SerialUSB.print(bmp.readSealevelPressure());
+    //SerialUSB.println(" Pa");
+
+  // you can get a more precise measurement of altitude
+  // if you know the current sea level pressure which will
+  // vary with weather and such. If it is 1015 millibars
+  // that is equal to 101500 Pascals.
+    //SerialUSB.print("Real altitude = ");
+    //SerialUSB.print(bmp.readAltitude(101500));
+    //SerialUSB.println(" meters");
+    
+    //SerialUSB.println();
+    //delay(500);
+}
