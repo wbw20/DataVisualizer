@@ -1,0 +1,183 @@
+// I2C device class (I2Cdev) demonstration Arduino sketch for MPU9150
+// 1/4/2013 original by Jeff Rowberg <jeff@rowberg.net> at https://github.com/jrowberg/i2cdevlib
+//          modified by Aaron Weiss <aaron@sparkfun.com>
+//
+// Changelog:
+//     2011-10-07 - initial release
+//     2013-1-4 - added raw magnetometer output
+
+/* ============================================
+I2Cdev device library code is placed under the MIT license
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+===============================================
+*/
+
+#define topRight    24
+#define topLeft     42
+#define bottomRight 23
+#define bottomLeft  43
+
+// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+// is used in I2Cdev.h
+#include "Wire.h"
+
+// I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
+// for both classes must be in the include path of your project
+#include "I2Cdev.h"
+#include "MPU6050.h"
+
+// class default I2C address is 0x68
+// specific I2C addresses may be passed as a parameter here
+// AD0 low = 0x68 (default for InvenSense evaluation board)
+// AD0 high = 0x69
+MPU6050 accelgyro;
+
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+int16_t mx, my, mz;
+
+int mode=-1;
+
+#define LED_PIN 13
+bool blinkState = false;
+float angle = 0;
+
+float gxout;
+float gyout;
+float gzout;
+float axout;
+float ayout;
+float azout;
+int precision=8;
+
+void setup() {
+  // join I2C bus (I2Cdev library doesn't do this automatically)
+  Wire.begin();
+
+  // initialize serial communication
+  // (38400 chosen because it works as well at 8MHz as it does at 16MHz, but
+  // it's really up to you depending on your project)
+  SerialUSB.begin(115200);
+
+  while (!SerialUSB);
+  
+  SerialUSB.println('a');
+  int a = 'b';
+  
+  while (a!='a')
+  {
+    a=SerialUSB.read();
+  }
+
+  // initialize device
+  //SerialUSB.println("Initializing I2C devices...");
+  accelgyro.initialize();
+
+  // verify connection
+  //SerialUSB.println("Testing device connections...");
+  //SerialUSB.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+
+  // configure Arduino LED for
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(bottomRight, INPUT);
+  digitalWrite(bottomRight, HIGH);
+  pinMode(topRight, INPUT);
+  digitalWrite(topRight, HIGH);
+  
+  pinMode(13,OUTPUT);
+}
+ 
+
+void loop() {
+  // read raw accel/gyro measurements from device
+  accelgyro.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
+  digitalWrite(13,HIGH);
+  digitalWrite(13,LOW);
+  
+
+  // these methods (and a few others) are also available
+  //accelgyro.getAcceleration(&ax, &ay, &az);
+  //accelgyro.getRotation(&gx, &gy, &gz);
+
+  // display tab-separated accel/gyro x/y/z values
+  //SerialUSB.print("a/g/m:\t");
+  //
+ 
+  if (SerialUSB.available()>0)
+    {
+      mode=SerialUSB.read();
+      switch (mode)
+      {
+        case 'G':
+          //Gyro axes are reoriented (by switching display order) to be 
+          //consistent with accelerometer and to be intuitive w/r/t board geometry
+          //and roll/pitch/yaw order
+          gyout = gy*(360./32700.);
+          SerialUSB.print(gyout,precision); SerialUSB.print("\t");
+          gxout = gx*(360./32700.);
+          SerialUSB.print(gxout, precision); SerialUSB.print("\t");
+          gzout = gz*(360./32700.);
+          SerialUSB.print(gzout,precision); SerialUSB.println("\t");
+        break;
+        case 'A':
+        for (int i=0;x<100;x++){
+          ayout = ((ay+750.)*(20./32500.)-.4292)*.9644;
+          SerialUSB.print(ayout,precision); SerialUSB.print("\t");
+          axout = ((ax+750.)*(20./32500.)-.2383)*.9695;
+          SerialUSB.print(axout,precision); SerialUSB.print("\t");
+          azout = ((az+750.)*(20./32500.)-.1458)*.9655;
+          SerialUSB.print(azout,precision); SerialUSB.println("\t");
+        }
+        break;
+      }
+    }
+  
+  //SerialUSB.print(mx); SerialUSB.print("\t");
+  //SerialUSB.print(my); SerialUSB.print("\t");
+  //SerialUSB.print(mz); SerialUSB.println("\t");
+
+
+/*
+  if (my > 0) {
+    angle = 90 - (float)(atan((float)(mx) / (float)(my)) * (180 / 3.14159));
+  }
+  if (my < 0) {
+    angle = 270 - (float)(atan((float)(mx) / (float)(my)) * (180 / 3.14159));
+  }
+  if ((my = 0) && mx < 0) {
+    angle = 180;
+  }
+  if ((my = 0) && mx > 0) {
+    angle = 0.0;
+  }
+  SerialUSB.println(angle);*/
+
+
+  // blink LED to indicate activity
+  blinkState = !blinkState;
+  digitalWrite(LED_PIN, blinkState);
+}
+
+//Xoffset=0.2216
+//Yoffset=0.4276
+//Zoffset=0.1188
+//Xscale=0.9685
+//Yscale=0.9645
+//Zscale=0.9656
